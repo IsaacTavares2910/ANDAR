@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>document.documentElement.dataset.theme = localStorage.getItem('andar-theme') || 'dark';</script>
+<title>Minha conta — ANDAR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="css/style.css">
+
+</head>
+<body>
+
+<div class="preloader"><span class="preloader__mark">ANDAR</span></div>
+
+<nav class="nav">
+  <a href="index.html" class="nav__logo">AN<span>D</span>AR</a>
+  <div class="nav__links">
+    <a href="index.html">Início</a>
+    <a href="produtos.html">Coleção</a>
+    <a href="index.html#sobre">A marca</a>
+    <a href="index.html#localizacao">Loja</a>
+  </div>
+  <div class="nav__actions">
+    <button class="theme-toggle" type="button" data-theme-toggle aria-label="Ativar modo claro" title="Alternar tema">
+      <svg class="theme-toggle__sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      <svg class="theme-toggle__moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M20 15.5A8.5 8.5 0 0 1 8.5 4 8.5 8.5 0 1 0 20 15.5Z"/></svg>
+    </button>
+    <a href="usuario.html" class="nav__icon-btn" aria-label="Minha conta">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c1.4-4 4.2-6 7.5-6s6.1 2 7.5 6"/></svg>
+    </a>
+    <button class="nav__burger" aria-label="Abrir menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<div class="nav__mobile">
+  <a href="index.html">Início</a>
+  <a href="produtos.html">Coleção</a>
+  <a href="index.html#sobre">A marca</a>
+  <a href="index.html#localizacao">Loja</a>
+  <a href="usuario.html">Minha con<span>ta</span></a>
+</div>
+
+<!-- ÁREA DO USUÁRIO
+     INTEGRAÇÃO FUTURA: proteja esta página e preencha os dados reais assim que o Supabase Auth estiver conectado:
+
+       const { data: { user } } = await supabase.auth.getUser();
+       if(!user){ window.location.href = 'login.html'; return; }
+       document.querySelector('[data-user-nome]').textContent = user.user_metadata?.nome || 'Cliente ANDAR';
+       document.querySelector('[data-user-email]').textContent = user.email;
+
+     Histórico de compras e favoritos: busque nas tabelas "pedidos" e "favoritos" filtrando por user.id. -->
+<main class="account">
+  <div class="account__header">
+    <div class="account__avatar">A</div>
+    <div>
+      <h1 class="account__name" data-user-nome>Nome do usuário</h1>
+      <p class="account__email" data-user-email>email@exemplo.com</p>
+    </div>
+  </div>
+
+  <div class="account__grid">
+    <div class="account__panel">
+      <h3>Histórico de compras</h3>
+      <p>Seus pedidos aparecerão aqui assim que a loja estiver conectada ao banco de dados.</p>
+      <div class="account__empty">Nenhum pedido encontrado ainda.</div>
+    </div>
+
+    <div class="account__panel">
+      <h3>Favoritos</h3>
+      <p>Os produtos que você salvar na coleção aparecerão aqui.</p>
+      <div class="account__empty" data-favoritos-total>Nenhum favorito salvo ainda.</div>
+      <div class="favorite-list" data-favoritos-list></div>
+    </div>
+
+    <div class="account__panel">
+      <h3>Carrinho</h3>
+      <p>Os produtos selecionados para compra aparecerão aqui.</p>
+      <div class="account__empty" data-carrinho-total>Nenhum item no carrinho ainda.</div>
+      <div class="cart-list" data-carrinho-list></div>
+      <strong class="cart-total" data-carrinho-total-price></strong>
+    </div>
+  </div>
+
+  <div class="account__logout">
+    <button class="btn btn--ghost" data-logout>Sair da conta</button>
+  </div>
+</main>
+
+<script type="module" src="js/main.js"></script>
+<script type="module" src="js/auth.js"></script>
+</body>
+</html>

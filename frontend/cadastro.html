@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>document.documentElement.dataset.theme = localStorage.getItem('andar-theme') || 'dark';</script>
+<title>Criar conta — ANDAR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="css/style.css">
+
+</head>
+<body>
+
+<div class="preloader"><span class="preloader__mark">ANDAR</span></div>
+
+<div class="auth">
+  <div class="auth__visual">
+    <p class="auth__quote">Cada conta é um <span>convite</span> para uma experiência sob medida.</p>
+  </div>
+
+  <div class="auth__form-wrap">
+    <div class="auth__form">
+      <a href="index.html" class="nav__logo">AN<span>D</span>AR</a>
+      <h1>Criar sua conta</h1>
+      <p class="lede">Cadastre-se para acompanhar pedidos, favoritos e novidades da coleção.</p>
+
+      <form id="form-cadastro" novalidate>
+        <div class="form-msg"></div>
+
+        <div class="field">
+          <input type="text" name="nome" id="nome" placeholder=" " autocomplete="name" required>
+          <label for="nome">Nome completo</label>
+          <span class="field__line"></span>
+        </div>
+
+        <div class="field">
+          <input type="email" name="email" id="email" placeholder=" " autocomplete="email" required>
+          <label for="email">E-mail</label>
+          <span class="field__line"></span>
+        </div>
+
+        <div class="field">
+          <input type="password" name="senha" id="senha" placeholder=" " autocomplete="new-password" required>
+          <label for="senha">Senha</label>
+          <span class="field__line"></span>
+          <p class="field__hint">Mínimo de 6 caracteres.</p>
+        </div>
+
+        <div class="field">
+          <input type="password" name="confirmarSenha" id="confirmarSenha" placeholder=" " autocomplete="new-password" required>
+          <label for="confirmarSenha">Confirmar senha</label>
+          <span class="field__line"></span>
+        </div>
+
+        <button type="submit" class="btn btn--block">Criar conta</button>
+      </form>
+
+      <div class="auth__divider">ou</div>
+      <p class="auth__foot">Já tem conta? <a href="login.html">Entrar</a></p>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="js/main.js"></script>
+<script type="module" src="js/auth.js"></script>
+</body>
+</html>

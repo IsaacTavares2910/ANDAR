@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>document.documentElement.dataset.theme = localStorage.getItem('andar-theme') || 'dark';</script>
+<title>Entrar — ANDAR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="css/style.css">
+
+</head>
+<body>
+
+<div class="preloader"><span class="preloader__mark">ANDAR</span></div>
+
+<div class="auth">
+  <div class="auth__visual">
+    <p class="auth__quote">O luxo está nos <span>detalhes</span> que ninguém vê, mas todos sentem.</p>
+  </div>
+
+  <div class="auth__form-wrap">
+    <div class="auth__form">
+      <a href="index.html" class="nav__logo">AN<span>D</span>AR</a>
+      <h1>Bem-vindo(a) de volta</h1>
+      <p class="lede">Entre com sua conta para acompanhar pedidos e favoritos.</p>
+
+      <form id="form-login" novalidate>
+        <div class="form-msg"></div>
+
+        <div class="field">
+          <input type="email" name="email" id="email" placeholder=" " autocomplete="email" required>
+          <label for="email">E-mail</label>
+          <span class="field__line"></span>
+        </div>
+
+        <div class="field">
+          <input type="password" name="senha" id="senha" placeholder=" " autocomplete="current-password" required>
+          <label for="senha">Senha</label>
+          <span class="field__line"></span>
+        </div>
+
+        <button type="submit" class="btn btn--block">Entrar</button>
+      </form>
+
+      <div class="auth__divider">ou</div>
+      <p class="auth__foot">Ainda não tem conta? <a href="cadastro.html">Criar conta</a></p>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="js/main.js"></script>
+<script type="module" src="js/auth.js"></script>
+</body>
+</html>
