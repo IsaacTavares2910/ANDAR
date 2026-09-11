@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel administrativo | ANDAR</title>
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+  <main class="admin-shell">
+    <section class="admin-login" data-admin-login aria-labelledby="admin-login-title">
+      <div class="admin-brand">AN<span>D</span>AR</div>
+      <p class="eyebrow">Área restrita</p>
+      <h1 id="admin-login-title">Painel administrativo</h1>
+      <p class="muted">Entre com sua conta autorizada para gerenciar a coleção.</p>
+      <form class="admin-form" data-login-form>
+        <label>Usuário<input name="usuario" autocomplete="username" required value="Isaac171"></label>
+        <label>Senha<input name="senha" type="password" autocomplete="current-password" required></label>
+        <button class="button button--gold" type="submit"><span>Entrar no painel</span><span class="button__spinner"></span></button>
+        <p class="form-message" data-login-message role="alert"></p>
+      </form>
+      <a class="back-link" href="index.html">Voltar para a loja</a>
+    </section>
+
+    <section class="admin-app is-hidden" data-admin-app>
+      <header class="admin-header">
+        <a class="admin-brand" href="index.html">AN<span>D</span>AR</a>
+        <div class="admin-header__right"><span class="admin-user" data-admin-user></span><button class="button button--quiet" type="button" data-logout>Sair</button></div>
+      </header>
+      <div class="admin-content">
+        <div class="admin-heading"><div><p class="eyebrow">Controle da coleção</p><h1>Produtos</h1><p class="muted">Atualize o catálogo que aparece na loja em tempo real.</p></div><button class="button button--gold" type="button" data-new-product>+ Novo produto</button></div>
+        <div class="toolbar"><label class="search-field"><span aria-hidden="true">⌕</span><input type="search" placeholder="Pesquisar por nome..." data-search></label><label class="select-field"><span>Categoria</span><select data-category-filter><option value="">Todas as categorias</option></select></label><button class="button button--quiet" type="button" data-refresh>Atualizar</button></div>
+        <div class="feedback" data-feedback role="status"></div>
+        <div class="stats"><div><span>Produtos</span><strong data-total-products>0</strong></div><div><span>Em estoque</span><strong data-in-stock>0</strong></div><div><span>Sem estoque</span><strong data-out-stock>0</strong></div></div>
+        <div class="products-admin-grid" data-products-grid aria-live="polite"></div>
+        <div class="empty-state is-hidden" data-empty><span>◌</span><h2>Nenhum produto encontrado</h2><p>Altere os filtros ou cadastre um novo modelo.</p></div>
+      </div>
+    </section>
+  </main>
+
+  <dialog class="product-dialog" data-product-dialog>
+    <form class="product-form" data-product-form method="dialog">
+      <div class="dialog-heading"><div><p class="eyebrow" data-dialog-eyebrow>Novo cadastro</p><h2 data-dialog-title>Novo produto</h2></div><button class="dialog-close" type="button" data-close-dialog aria-label="Fechar">×</button></div>
+      <div class="form-grid">
+        <label class="field--wide">Nome<input name="nome" required maxlength="120"></label>
+        <label>Categoria<select name="categoria_id" data-category-input required><option value="">Selecione</option></select></label>
+        <label>Preço (R$)<input name="preco" type="number" min="0" step="0.01" required></label>
+        <label>Estoque<input name="estoque" type="number" min="0" step="1" required></label>
+        <label>Tamanhos disponíveis<input name="tamanho" placeholder="34, 35, 36, 37" required></label>
+        <label class="field--wide">Descrição<textarea name="descricao" rows="4" maxlength="1000"></textarea></label>
+        <div class="image-field field--wide"><span class="field-label">Imagem do produto</span><div class="image-picker"><div class="image-preview"><img data-image-preview alt="Prévia do produto"><span data-image-placeholder>Sem imagem</span></div><div><label class="upload-button">Escolher imagem<input name="imagem" type="file" accept="image/jpeg,image/png,image/webp"></label><p class="help-text">JPG, PNG ou WEBP. A imagem só é enviada ao salvar.</p></div></div></div>
+      </div>
+      <div class="dialog-actions"><button class="button button--quiet" type="button" data-close-dialog>Cancelar</button><button class="button button--gold" type="submit" data-save-product><span>Salvar produto</span><span class="button__spinner"></span></button></div>
+      <p class="form-message" data-form-message role="alert"></p>
+    </form>
+  </dialog>
+  <script type="module" src="js/admin.js"></script>
+</body>
+</html>

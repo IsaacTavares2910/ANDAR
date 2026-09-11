@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initTheme();
   initPreloader();
   initNav();
+  initSupport();
   initMobileMenu();
   initScrollReveal();
   initHeroVideo();
@@ -26,6 +27,107 @@ function initTheme(){
       button.setAttribute('aria-label', theme === 'light' ? 'Ativar modo escuro' : 'Ativar modo claro');
     });
   });
+}
+
+function initSupport(){
+  const navActions = document.querySelector('.nav__actions');
+  if(!navActions || document.querySelector('[data-support-trigger]')) return;
+
+  const accountLink = navActions.querySelector('.nav__icon-btn');
+  const trigger = document.createElement('button');
+  trigger.className = 'support-trigger';
+  trigger.type = 'button';
+  trigger.setAttribute('data-support-trigger', '');
+  trigger.setAttribute('aria-label', 'Abrir suporte');
+  trigger.title = 'Suporte';
+  trigger.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 13a8 8 0 0 1 16 0v4a2 2 0 0 1-2 2h-1v-6h3M4 13v4a2 2 0 0 0 2 2h1v-6H4Z"/><path d="M12 19v2M9 21h6"/></svg><span>Suporte</span>';
+  navActions.insertBefore(trigger, accountLink || navActions.firstChild);
+
+  const mobileMenu = document.querySelector('.nav__mobile');
+  if(mobileMenu && !mobileMenu.querySelector('[data-support-trigger]')){
+    const mobileTrigger = document.createElement('a');
+    mobileTrigger.href = '#suporte';
+    mobileTrigger.textContent = 'Suporte';
+    mobileTrigger.dataset.supportTrigger = '';
+    mobileMenu.appendChild(mobileTrigger);
+    mobileTrigger.addEventListener('click', event => { event.preventDefault(); abrirSuporte(); });
+  }
+
+  const modal = document.createElement('dialog');
+  modal.className = 'support-modal';
+  modal.dataset.supportModal = '';
+  modal.innerHTML = '<div class="support-modal__panel"><div class="support-modal__head"><div><span class="label">Atendimento ANDAR</span><h2>Suporte</h2></div><button type="button" class="support-modal__close" data-support-close aria-label="Fechar suporte">&times;</button></div><div class="support-chat"><div class="support-messages" data-support-messages></div><form class="support-composer" data-support-form><input name="mensagem" autocomplete="off" placeholder="Digite sua mensagem..." aria-label="Mensagem para o suporte" maxlength="500" required><button type="submit" aria-label="Enviar mensagem">Enviar <span>↗</span></button></form><a class="support-whatsapp support-whatsapp--footer" href="https://wa.me/5511978398836" target="_blank" rel="noopener noreferrer">Falar no WhatsApp <span>↗</span></a></div></div>';
+  document.body.appendChild(modal);
+  trigger.addEventListener('click', abrirSuporte);
+  modal.querySelector('[data-support-close]').addEventListener('click', () => modal.close());
+  modal.addEventListener('click', event => { if(event.target === modal) modal.close(); });
+  modal.querySelector('[data-support-form]').addEventListener('submit', event => enviarMensagem(event, modal));
+  document.addEventListener('keydown', event => { if(event.key === 'Escape' && modal.open) modal.close(); });
+
+  function abrirSuporte(){
+    const messages = modal.querySelector('[data-support-messages]');
+    messages.innerHTML = '';
+    adicionarMensagem(messages, 'bot', 'Olá! 👋 Sou o assistente da ANDAR. Como posso ajudar?');
+    modal.showModal();
+    modal.querySelector('[name="mensagem"]').focus();
+  }
+}
+
+function enviarMensagem(event, modal){
+  event.preventDefault();
+  const form = event.currentTarget;
+  const input = form.elements.mensagem;
+  const texto = input.value.trim();
+  if(!texto) return;
+
+  const messages = modal.querySelector('[data-support-messages]');
+  adicionarMensagem(messages, 'user', texto);
+  input.value = '';
+  form.querySelector('button').disabled = true;
+  const typing = document.createElement('div');
+  typing.className = 'support-typing';
+  typing.innerHTML = '<span></span><span></span><span></span><em>ANDAR está digitando</em>';
+  messages.appendChild(typing);
+  messages.scrollTop = messages.scrollHeight;
+
+  window.setTimeout(() => {
+    typing.remove();
+    const resposta = responderMensagem(texto);
+    adicionarMensagem(messages, 'bot', resposta.texto, resposta.fallback);
+    form.querySelector('button').disabled = false;
+    input.focus();
+  }, 550);
+}
+
+function adicionarMensagem(container, autor, texto, fallback = false){
+  const message = document.createElement('div');
+  message.className = `support-bubble support-bubble--${autor}`;
+  const content = document.createElement('p');
+  content.textContent = texto;
+  message.appendChild(content);
+  if(fallback){
+    const link = document.createElement('a');
+    link.className = 'support-whatsapp';
+    link.href = 'https://wa.me/5511978398836';
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.textContent = 'Falar no WhatsApp ↗';
+    message.appendChild(link);
+  }
+  container.appendChild(message);
+  container.scrollTop = container.scrollHeight;
+}
+
+function responderMensagem(mensagem){
+  const texto = mensagem.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  if(/pedido|compra|encomenda|rastre/.test(texto)) return { texto: 'Sobre pedidos: confira o status na sua conta. Se já tiver o número do pedido, envie pelo WhatsApp para nossa equipe localizar tudo mais rápido.' };
+  if(/pagamento|pix|cartao|cartão|cobranca|cobrança|parcel/.test(texto)) return { texto: 'Aceitamos as opções de pagamento disponíveis no checkout. Em caso de cobrança duplicada ou pagamento pendente, nossa equipe pode verificar a transação pelo WhatsApp.' };
+  if(/produto|modelo|material|cor|qualidade/.test(texto)) return { texto: 'Nossos produtos são feitos em pequenos lotes, com materiais selecionados e acabamento cuidadoso. Você pode ver os modelos disponíveis na Coleção.' };
+  if(/tamanho|numero|número|medida|forma/.test(texto)) return { texto: 'Para escolher o tamanho, confira os tamanhos disponíveis na página do produto. Se ficar entre dois números, fale conosco para receber uma orientação personalizada.' };
+  if(/estoque|disponivel|disponível|acabou|esgotado/.test(texto)) return { texto: 'O estoque é atualizado diretamente na nossa coleção. Quando um item aparece como esgotado, fale conosco para saber sobre reposição.' };
+  if(/entrega|envio|frete|prazo|chegar/.test(texto)) return { texto: 'O prazo e o valor da entrega aparecem no checkout conforme o endereço informado. O envio é rastreado e segue em embalagem especial.' };
+  if(/troca|devolucao|devolução|defeito|garantia/.test(texto)) return { texto: 'Para solicitar troca ou devolução, fale com nosso atendimento informando o número do pedido. Vamos orientar você em cada etapa.' };
+  return { texto: 'Desculpe, não consegui entender seu problema. 😕 Para receber uma explicação mais detalhada, entre em contato pelo WhatsApp (11) 97839-8836.', fallback: true };
 }
 
 /* ---------------------------------------------------------------------- */
