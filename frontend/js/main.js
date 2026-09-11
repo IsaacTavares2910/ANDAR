@@ -1,4 +1,6 @@
-/* ==========================================================================
+import { listarCategorias, listarProdutos } from '../src/services/storeService';
+
+/* ========================================================================== 
    ANDAR — main.js
    Comportamentos globais: preloader, navegação, menu mobile, scroll reveal,
    vídeo do hero e utilidades compartilhadas (toast) usadas em outras páginas.
@@ -68,6 +70,7 @@ function initSupport(){
     const messages = modal.querySelector('[data-support-messages]');
     messages.innerHTML = '';
     adicionarMensagem(messages, 'bot', 'Olá! 👋 Sou o assistente da ANDAR. Como posso ajudar?');
+    prepararDadosAtendimento();
     modal.showModal();
     modal.querySelector('[name="mensagem"]').focus();
   }
@@ -90,9 +93,9 @@ function enviarMensagem(event, modal){
   messages.appendChild(typing);
   messages.scrollTop = messages.scrollHeight;
 
-  window.setTimeout(() => {
+  window.setTimeout(async () => {
     typing.remove();
-    const resposta = responderMensagem(texto);
+    const resposta = await responderMensagem(texto);
     adicionarMensagem(messages, 'bot', resposta.texto, resposta.fallback);
     form.querySelector('button').disabled = false;
     input.focus();
@@ -118,16 +121,89 @@ function adicionarMensagem(container, autor, texto, fallback = false){
   container.scrollTop = container.scrollHeight;
 }
 
-function responderMensagem(mensagem){
-  const texto = mensagem.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+let dadosAtendimento = { produtos: [], categorias: [], carregando: null, ultimoResultado: [] };
+
+async function prepararDadosAtendimento(){
+  if(dadosAtendimento.produtos.length || dadosAtendimento.carregando) return dadosAtendimento.carregando;
+  dadosAtendimento.carregando = Promise.all([listarProdutos(), listarCategorias()])
+    .then(([produtos, categorias]) => { dadosAtendimento.produtos = produtos; dadosAtendimento.categorias = categorias; })
+    .catch(erro => console.error('Catálogo indisponível para o atendimento:', erro))
+    .finally(() => { dadosAtendimento.carregando = null; });
+  return dadosAtendimento.carregando;
+}
+
+async function responderMensagem(mensagem){
+  await prepararDadosAtendimento();
+  const texto = normalizar(mensagem);
+  const produtos = dadosAtendimento.produtos;
+  const referenciado = encontrarReferencia(texto, dadosAtendimento.ultimoResultado, produtos);
+
   if(/pedido|compra|encomenda|rastre/.test(texto)) return { texto: 'Sobre pedidos: confira o status na sua conta. Se já tiver o número do pedido, envie pelo WhatsApp para nossa equipe localizar tudo mais rápido.' };
-  if(/pagamento|pix|cartao|cartão|cobranca|cobrança|parcel/.test(texto)) return { texto: 'Aceitamos as opções de pagamento disponíveis no checkout. Em caso de cobrança duplicada ou pagamento pendente, nossa equipe pode verificar a transação pelo WhatsApp.' };
-  if(/produto|modelo|material|cor|qualidade/.test(texto)) return { texto: 'Nossos produtos são feitos em pequenos lotes, com materiais selecionados e acabamento cuidadoso. Você pode ver os modelos disponíveis na Coleção.' };
-  if(/tamanho|numero|número|medida|forma/.test(texto)) return { texto: 'Para escolher o tamanho, confira os tamanhos disponíveis na página do produto. Se ficar entre dois números, fale conosco para receber uma orientação personalizada.' };
-  if(/estoque|disponivel|disponível|acabou|esgotado/.test(texto)) return { texto: 'O estoque é atualizado diretamente na nossa coleção. Quando um item aparece como esgotado, fale conosco para saber sobre reposição.' };
-  if(/entrega|envio|frete|prazo|chegar/.test(texto)) return { texto: 'O prazo e o valor da entrega aparecem no checkout conforme o endereço informado. O envio é rastreado e segue em embalagem especial.' };
-  if(/troca|devolucao|devolução|defeito|garantia/.test(texto)) return { texto: 'Para solicitar troca ou devolução, fale com nosso atendimento informando o número do pedido. Vamos orientar você em cada etapa.' };
-  return { texto: 'Desculpe, não consegui entender seu problema. 😕 Para receber uma explicação mais detalhada, entre em contato pelo WhatsApp (11) 97839-8836.', fallback: true };
+  if(/pagamento|pix|cartao|cobranca|parcel/.test(texto)) return { texto: 'O pagamento é finalizado no checkout. Em caso de cobrança duplicada ou pagamento pendente, nossa equipe pode verificar a transação pelo WhatsApp.' };
+  if(/troca|devolucao|defeito|garantia/.test(texto)) return { texto: 'Para solicitar troca ou devolução, fale com nosso atendimento informando o número do pedido. Vamos orientar você em cada etapa.' };
+  if(/entrega|envio|frete|prazo|chegar|localizacao|endereco|onde fica|contato|telefone|whatsapp/.test(texto)) return { texto: 'A ANDAR atende pelo WhatsApp (11) 97839-8836. O prazo e o valor da entrega aparecem no checkout conforme o endereço informado.' };
+  if(/promoc|desconto|cupom|oferta/.test(texto)) return { texto: 'Não encontrei promoções ou descontos cadastrados no catálogo neste momento. Para confirmar uma campanha vigente, fale com a equipe pelo WhatsApp.' };
+  if(referenciado) return respostaProduto(referenciado);
+  if(!produtos.length) return { texto: 'Não consegui acessar produtos cadastrados agora. Tente novamente em instantes ou fale com a equipe pelo WhatsApp.', fallback: true };
+
+  const filtros = interpretarFiltros(texto, produtos);
+  let encontrados = produtos.filter(produto => {
+    const nomeDescricao = normalizar(`${produto.nome || ''} ${produto.descricao || ''}`);
+    const categoria = normalizar(nomeCategoria(produto.categoria_id));
+    if(filtros.categorias.length && !filtros.categorias.some(item => String(item.id) === String(produto.categoria_id))) return false;
+    if(filtros.categoria && !filtros.categorias.length && !categoria.includes(filtros.categoria) && !nomeDescricao.includes(filtros.categoria)) return false;
+    if(filtros.cor && !nomeDescricao.includes(filtros.cor)) return false;
+    if(filtros.termos.length && !filtros.termos.some(termo => nomeDescricao.includes(termo))) return false;
+    if(filtros.preco !== null && (filtros.ate ? Number(produto.preco) > filtros.preco : Number(produto.preco) < filtros.preco)) return false;
+    return !filtros.disponivel || Number(produto.estoque || 0) > 0;
+  });
+  if(/mais barato|menor preco|barato|economico/.test(texto)) encontrados.sort((a, b) => Number(a.preco) - Number(b.preco));
+  if(/mais caro|maior preco|caro/.test(texto)) encontrados.sort((a, b) => Number(b.preco) - Number(a.preco));
+  if(encontrados.length){
+    dadosAtendimento.ultimoResultado = encontrados;
+    return { texto: formatarLista(encontrados, filtros) };
+  }
+  const nome = produtos.find(produto => texto.includes(normalizar(produto.nome)))?.nome;
+  if(nome) return { texto: `Não encontrei “${nome}” disponível no catálogo. Posso mostrar outros modelos cadastrados.` };
+  return { texto: 'Não encontrei essa informação no catálogo cadastrado. Posso listar os produtos disponíveis, filtrar por categoria, preço, cor ou finalidade.', fallback: true };
+}
+
+function normalizar(valor){ return valor.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
+function nomeCategoria(id){ return dadosAtendimento.categorias.find(item => String(item.id) === String(id))?.nome || ''; }
+function formatarPreco(valor){ return Number(valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+function obterTamanhos(produto){
+  const valores = produto.tamanhos_disponiveis || produto.tamanhos || produto.sizes || produto.tamanho;
+  return Array.isArray(valores) ? valores : String(valores || '').split(',').map(item => item.trim()).filter(Boolean);
+}
+function encontrarReferencia(texto, contexto, produtos){
+  const indice = texto.match(/(?:o|a)?\s*(primeiro|segundo|terceiro|1|2|3)\b/);
+  if(indice && contexto.length) return contexto[{ primeiro: 0, '1': 0, segundo: 1, '2': 1, terceiro: 2, '3': 2 }[indice[1]]];
+  return produtos.find(produto => texto.includes(normalizar(produto.nome)));
+}
+function respostaProduto(produto){
+  const tamanhos = obterTamanhos(produto);
+  const dados = [`${produto.nome}: ${formatarPreco(produto.preco)}`, Number(produto.estoque || 0) > 0 ? `disponível (${produto.estoque} em estoque)` : 'esgotado'];
+  if(tamanhos.length) dados.push(`tamanhos: ${tamanhos.join(', ')}`);
+  if(nomeCategoria(produto.categoria_id)) dados.push(`categoria: ${nomeCategoria(produto.categoria_id)}`);
+  if(produto.descricao) dados.push(produto.descricao);
+  dadosAtendimento.ultimoResultado = [produto];
+  return { texto: dados.join(' · ') };
+}
+function interpretarFiltros(texto, produtos){
+  const categorias = dadosAtendimento.categorias.filter(item => item.nome && texto.includes(normalizar(item.nome)));
+  const categoria = ['tenis', 'bota', 'esportivo', 'sandalia', 'calcado', 'sapato'].find(item => texto.includes(item));
+  const cor = ['preto', 'branco', 'azul', 'vermelho', 'verde', 'rosa', 'bege', 'marrom', 'cinza', 'amarelo'].find(item => texto.includes(item));
+  const precoTexto = texto.match(/(?:r\$\s*)?(\d{1,5}(?:[.,]\d{1,2})?)/);
+  const ignorar = new Set(['quais', 'produtos', 'produto', 'voces', 'tem', 'têm', 'tenis', 'bota', 'esportivo', 'mais', 'barato', 'caro', 'disponivel', 'disponiveis', 'para', 'com', 'ate', 'r$']);
+  const termos = texto.split(/\s+/).filter(termo => termo.length > 2 && !ignorar.has(termo) && !/^[0-9.,]+$/.test(termo) && termo !== cor);
+  const nomes = produtos.map(produto => normalizar(produto.nome || ''));
+  const termosDoCatalogo = termos.filter(termo => nomes.some(nome => nome.includes(termo)));
+  return { categorias, categoria, cor, termos: termosDoCatalogo, preco: precoTexto ? Number(precoTexto[1].replace('.', '').replace(',', '.')) : null, ate: /ate|menos de|no maximo/.test(texto), disponivel: !/esgotad|sem estoque|indisponivel/.test(texto) };
+}
+function formatarLista(produtos, filtros){
+  const titulo = produtos.length === 1 ? 'Encontrei este produto:' : `Encontrei ${produtos.length} produtos${filtros.categorias.length ? ` na categoria ${filtros.categorias[0].nome}` : ''}:`;
+  const itens = produtos.slice(0, 8).map((produto, index) => `${index + 1}. ${produto.nome} — ${formatarPreco(produto.preco)} — ${Number(produto.estoque || 0) > 0 ? `disponível (${produto.estoque} em estoque)` : 'esgotado'}`);
+  return `${titulo} ${itens.join(' | ')}${produtos.length > 8 ? ' | Mostrando os 8 primeiros; posso filtrar mais.' : ''}`;
 }
 
 /* ---------------------------------------------------------------------- */
