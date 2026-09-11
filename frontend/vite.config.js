@@ -9,7 +9,8 @@ export default defineConfig({
         produtos: resolve(__dirname, 'produtos.html'),
         login: resolve(__dirname, 'login.html'),
         cadastro: resolve(__dirname, 'cadastro.html'),
-        usuario: resolve(__dirname, 'usuario.html')
+        usuario: resolve(__dirname, 'usuario.html'),
+        admin: resolve(__dirname, 'admin.html')
       }
     }
   }

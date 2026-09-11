@@ -10,7 +10,7 @@ O painel está disponível em `/admin` (ou `/admin.html`). O login usa Supabase 
    - Senha: `594416`
    - Confirmação de e-mail: habilitada
 3. Copie o UUID desse usuário.
-4. Abra o SQL Editor e execute `supabase-admin.sql`. Na linha de inserção comentada, substitua `UUID_REAL` pelo UUID copiado e execute-a.
+4. Abra o SQL Editor e execute `backend/supabase-admin.sql`. Na linha de inserção comentada, substitua `UUID_REAL` pelo UUID copiado e execute-a.
 5. Publique o site normalmente. O usuário entra no painel com `Isaac171` e `594416`.
 
 A migração reutiliza `produtos` e `categorias` existentes, cria somente `admin_users` e o bucket público `produtos`, e aplica RLS às operações de produtos e imagens. A coluna já existente `produtos.tamanho` é usada para tamanhos disponíveis.
